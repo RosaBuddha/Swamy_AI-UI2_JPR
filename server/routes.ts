@@ -1122,6 +1122,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Version endpoint
+  app.get("/api/version", async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Read version info from JSON file
+      const versionInfoPath = path.join(process.cwd(), 'version-info.json');
+      const versionInfo = JSON.parse(fs.readFileSync(versionInfoPath, 'utf8'));
+      
+      res.json(versionInfo);
+    } catch (error) {
+      console.error('Error reading version info:', error);
+      // Fallback to VERSION file
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const versionPath = path.join(process.cwd(), 'VERSION');
+        const version = fs.readFileSync(versionPath, 'utf8').trim();
+        
+        res.json({
+          version,
+          timestamp: new Date().toISOString(),
+          buildDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        });
+      } catch (fallbackError) {
+        console.error('Error reading VERSION file:', fallbackError);
+        res.json({
+          version: "00001",
+          timestamp: new Date().toISOString(),
+          buildDate: "Unknown"
+        });
+      }
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

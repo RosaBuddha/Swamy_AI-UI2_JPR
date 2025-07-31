@@ -15,6 +15,7 @@ import ApiLogs from './ApiLogs';
 import type { MockResponse } from '@shared/schema';
 import { FollowUpChipForm } from './FollowUpChipForm';
 import { ObjectUploader } from '../ObjectUploader';
+import { VersionDisplay } from '../ui/VersionDisplay';
 import type { UploadResult } from '@uppy/core';
 
 interface AdminPageProps {
@@ -22,7 +23,7 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'home' | 'responses' | 'system' | 'rag' | 'logs' | 'personalize'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'responses' | 'system' | 'rag' | 'logs' | 'personalize' | 'version'>('home');
   const [openingText, setOpeningText] = useState('');
   const [supportingText, setSupportingText] = useState('');
   const [introQuestions, setIntroQuestions] = useState('');
@@ -955,6 +956,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
               }`}
             >
               Personalize
+            </button>
+            <button
+              onClick={() => setActiveTab('version')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'version'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-800 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Version
             </button>
           </nav>
         </div>
@@ -2017,6 +2028,43 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
                 >
                   {updateUserNameMutation.isPending ? 'Saving...' : 'Save User Name'}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
+      {/* Version Tab */}
+      {activeTab === 'version' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Application Version</CardTitle>
+              <CardDescription>
+                Current version information and deployment details. The version automatically increments during deployment.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <VersionDisplay showDetails={true} className="text-base" />
+              
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Version System</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div>• Version numbers increment automatically during deployment</div>
+                  <div>• Format: v.00001, v.00002, etc.</div>
+                  <div>• Visible to users in bottom-right corner of the application</div>
+                  <div>• Deployment scripts are available in the scripts/ directory</div>
+                </div>
+              </div>
+              
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Deployment Commands</h4>
+                <div className="bg-gray-50 p-4 rounded-lg font-mono text-sm">
+                  <div className="text-gray-700 mb-2"># Manual version increment:</div>
+                  <div className="text-blue-600">node scripts/increment-version.js</div>
+                  <div className="text-gray-700 mb-2 mt-4"># Full deployment with version bump:</div>
+                  <div className="text-blue-600">bash scripts/deploy.sh</div>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -3,6 +3,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { TaskSidebar } from './components/layout/TaskSidebar';
 import { ChatArea } from './components/chat/ChatArea';
 import { AdminPage } from './components/admin/AdminPage';
+import { VersionDisplay } from './components/ui/VersionDisplay';
 import { useChat } from './hooks/useChat';
 
 type AppView = 'chat' | 'admin';
@@ -149,6 +150,11 @@ function App() {
           />
         </div>
       )}
+      
+      {/* Version display in bottom-right corner */}
+      <div className="fixed bottom-4 right-4 z-10">
+        <VersionDisplay />
+      </div>
     </div>
   );
 }
