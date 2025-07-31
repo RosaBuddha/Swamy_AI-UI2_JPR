@@ -13,6 +13,12 @@ interface TaskSidebarProps {
 
 const tasks = [
   {
+    id: 'find-replacement',
+    title: 'Find a product replacement',
+    icon: RotateCcw,
+    color: 'bg-purple-50 text-purple-600',
+  },
+  {
     id: 'help-sell',
     title: 'Help me sell',
     icon: DollarSign,
@@ -23,12 +29,6 @@ const tasks = [
     title: 'Answer a product question',
     icon: HelpCircle,
     color: 'bg-blue-50 text-blue-600',
-  },
-  {
-    id: 'find-replacement',
-    title: 'Find a product replacement',
-    icon: RotateCcw,
-    color: 'bg-purple-50 text-purple-600',
   },
   {
     id: 'respond-questionnaire',
