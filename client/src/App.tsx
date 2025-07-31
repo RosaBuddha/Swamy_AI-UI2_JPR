@@ -153,7 +153,7 @@ function App() {
       
       {/* Version display in bottom-right corner */}
       <div className="fixed bottom-4 right-4 z-10">
-        <VersionDisplay />
+        <VersionDisplay showFeedbackButton={true} />
       </div>
     </div>
   );

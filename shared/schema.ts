@@ -30,6 +30,30 @@ export const mockResponses = pgTable("mock_responses", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'bug', 'feature', 'general'
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  priority: text("priority").default("medium"), // 'low', 'medium', 'high', 'critical'
+  status: text("status").default("new"), // 'new', 'in-review', 'resolved', 'closed'
+  userEmail: text("user_email"),
+  browserInfo: text("browser_info"),
+  currentRoute: text("current_route"),
+  appVersion: text("app_version"),
+  conversationSnapshotId: integer("conversation_snapshot_id"),
+  adminResponse: text("admin_response"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const conversationSnapshots = pgTable("conversation_snapshots", {
+  id: serial("id").primaryKey(),
+  messages: text("messages").notNull(), // JSON string of conversation history
+  sessionInfo: text("session_info"), // Additional session metadata as JSON
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -53,12 +77,33 @@ export const insertMockResponseSchema = createInsertSchema(mockResponses).pick({
   followUpLinkedResponseIds: true,
 });
 
+export const insertFeedbackSchema = createInsertSchema(feedback).pick({
+  type: true,
+  title: true,
+  description: true,
+  priority: true,
+  userEmail: true,
+  browserInfo: true,
+  currentRoute: true,
+  appVersion: true,
+  conversationSnapshotId: true,
+});
+
+export const insertConversationSnapshotSchema = createInsertSchema(conversationSnapshots).pick({
+  messages: true,
+  sessionInfo: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertSetting = z.infer<typeof insertSettingSchema>;
 export type Setting = typeof settings.$inferSelect;
 export type InsertMockResponse = z.infer<typeof insertMockResponseSchema>;
 export type MockResponse = typeof mockResponses.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertConversationSnapshot = z.infer<typeof insertConversationSnapshotSchema>;
+export type ConversationSnapshot = typeof conversationSnapshots.$inferSelect;
 
 // Chat response types for Phase 2 disambiguation implementation
 export interface ProductOption {

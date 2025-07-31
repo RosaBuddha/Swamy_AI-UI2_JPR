@@ -16,6 +16,7 @@ import type { MockResponse } from '@shared/schema';
 import { FollowUpChipForm } from './FollowUpChipForm';
 import { ObjectUploader } from '../ObjectUploader';
 import { VersionDisplay } from '../ui/VersionDisplay';
+import { FeedbackManager } from './FeedbackManager';
 import type { UploadResult } from '@uppy/core';
 
 interface AdminPageProps {
@@ -23,7 +24,7 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'home' | 'responses' | 'system' | 'rag' | 'logs' | 'personalize' | 'version'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'responses' | 'system' | 'rag' | 'logs' | 'personalize' | 'version' | 'feedback'>('home');
   const [openingText, setOpeningText] = useState('');
   const [supportingText, setSupportingText] = useState('');
   const [introQuestions, setIntroQuestions] = useState('');
@@ -966,6 +967,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
               }`}
             >
               Version
+            </button>
+            <button
+              onClick={() => setActiveTab('feedback')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'feedback'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-800 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Feedback
             </button>
           </nav>
         </div>
@@ -2068,6 +2079,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Feedback Tab */}
+      {activeTab === 'feedback' && (
+        <div className="space-y-6">
+          <FeedbackManager />
         </div>
       )}
     </div>

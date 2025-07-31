@@ -1,4 +1,4 @@
-import { users, settings, mockResponses, type User, type InsertUser, type Setting, type InsertSetting, type MockResponse, type InsertMockResponse } from "@shared/schema";
+import { users, settings, mockResponses, feedback, conversationSnapshots, type User, type InsertUser, type Setting, type InsertSetting, type MockResponse, type InsertMockResponse, type Feedback, type InsertFeedback, type ConversationSnapshot, type InsertConversationSnapshot } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -18,6 +18,17 @@ export interface IStorage {
   createMockResponse(mockResponse: InsertMockResponse): Promise<MockResponse>;
   updateMockResponse(id: number, mockResponse: InsertMockResponse): Promise<MockResponse>;
   deleteMockResponse(id: number): Promise<void>;
+  
+  // Feedback methods
+  getFeedback(): Promise<Feedback[]>;
+  getFeedbackById(id: number): Promise<Feedback | undefined>;
+  createFeedback(feedbackData: InsertFeedback): Promise<Feedback>;
+  updateFeedback(id: number, updates: Partial<InsertFeedback>): Promise<Feedback>;
+  updateFeedbackStatus(id: number, status: string, adminResponse?: string): Promise<Feedback>;
+  
+  // Conversation snapshot methods
+  createConversationSnapshot(snapshot: InsertConversationSnapshot): Promise<ConversationSnapshot>;
+  getConversationSnapshot(id: number): Promise<ConversationSnapshot | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -121,6 +132,61 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMockResponse(id: number): Promise<void> {
     await db.delete(mockResponses).where(eq(mockResponses.id, id));
+  }
+
+  // Feedback methods
+  async getFeedback(): Promise<Feedback[]> {
+    return await db.select().from(feedback).orderBy(desc(feedback.createdAt));
+  }
+
+  async getFeedbackById(id: number): Promise<Feedback | undefined> {
+    const [feedbackItem] = await db.select().from(feedback).where(eq(feedback.id, id));
+    return feedbackItem || undefined;
+  }
+
+  async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
+    const [newFeedback] = await db
+      .insert(feedback)
+      .values(feedbackData)
+      .returning();
+    return newFeedback;
+  }
+
+  async updateFeedback(id: number, updates: Partial<InsertFeedback>): Promise<Feedback> {
+    const [updatedFeedback] = await db
+      .update(feedback)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(feedback.id, id))
+      .returning();
+    return updatedFeedback;
+  }
+
+  async updateFeedbackStatus(id: number, status: string, adminResponse?: string): Promise<Feedback> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (adminResponse) {
+      updateData.adminResponse = adminResponse;
+    }
+    
+    const [updatedFeedback] = await db
+      .update(feedback)
+      .set(updateData)
+      .where(eq(feedback.id, id))
+      .returning();
+    return updatedFeedback;
+  }
+
+  // Conversation snapshot methods
+  async createConversationSnapshot(snapshot: InsertConversationSnapshot): Promise<ConversationSnapshot> {
+    const [newSnapshot] = await db
+      .insert(conversationSnapshots)
+      .values(snapshot)
+      .returning();
+    return newSnapshot;
+  }
+
+  async getConversationSnapshot(id: number): Promise<ConversationSnapshot | undefined> {
+    const [snapshot] = await db.select().from(conversationSnapshots).where(eq(conversationSnapshots.id, id));
+    return snapshot || undefined;
   }
 }
 
