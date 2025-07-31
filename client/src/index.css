@@ -1,0 +1,381 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 194 16% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 194 16% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 194 16% 18%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --grey-900: #505050;
+    --grey-800: #757575;
+    --grey-700: #8A8A8A;
+    --grey-600: #999999;
+    --grey-500: #AFAFAF;
+    --grey-400: #CCCCCC;
+    --grey-300: #E3E3E3;
+    --grey-200: #ECECEC;
+    --grey-100: #F4F4F4;
+    --grey-50: #FBFBFB;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(253deg, #EEECF6 0%, #FFF 30.22%, #FFF 70.52%, #EEECF6 100.74%);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .text-gray-900 {
+    color: #505050 !important;
+  }
+  
+  /* Custom color additions */
+  .text-custom-dark {
+    color: #222c2e;
+  }
+  
+  /* Chat content text color - ensure all text in chat is black */
+  .chat-content,
+  .chat-content *,
+  .chat-content p,
+  .chat-content div,
+  .chat-content span,
+  .chat-content strong,
+  .chat-content em,
+  .chat-content li,
+  .chat-content ul,
+  .chat-content ol {
+    color: #222c2e !important;
+  }
+  
+  /* Blue color palette for selected states */
+  .bg-blue-50-custom {
+    background-color: #F6F9FE;
+  }
+  
+  .bg-blue-100-custom {
+    background-color: #E4F2FF;
+  }
+  
+  .text-blue-700-custom {
+    color: #3774EA;
+  }
+  
+  /* Table styling for rich text content - more specific selectors */
+  .prose table,
+  div[class*="prose"] table,
+  .text-gray-900 table,
+  table {
+    border-collapse: collapse !important;
+    margin: 0 !important;
+    overflow: hidden;
+    table-layout: auto;
+    width: 100% !important;
+    display: table !important;
+  }
+  
+  .prose table td,
+  .prose table th,
+  div[class*="prose"] table td,
+  div[class*="prose"] table th,
+  .text-gray-900 table td,
+  .text-gray-900 table th,
+  table td,
+  table th {
+    border: 1px solid #e5e7eb !important;
+    box-sizing: border-box;
+    min-width: 1em;
+    padding: 8px 12px !important;
+    position: relative;
+    vertical-align: top;
+    display: table-cell !important;
+  }
+  
+  .prose table th,
+  div[class*="prose"] table th,
+  .text-gray-900 table th,
+  table th {
+    background-color: #f9fafb !important;
+    font-weight: 600 !important;
+    text-align: left;
+  }
+  
+  .prose table tr,
+  div[class*="prose"] table tr,
+  .text-gray-900 table tr,
+  table tr {
+    display: table-row !important;
+  }
+  
+  .prose table tbody,
+  div[class*="prose"] table tbody,
+  .text-gray-900 table tbody,
+  table tbody {
+    display: table-row-group !important;
+  }
+  
+  .prose table thead,
+  div[class*="prose"] table thead,
+  .text-gray-900 table thead,
+  table thead {
+    display: table-header-group !important;
+  }
+  
+  .prose table .selectedCell:after {
+    background: rgba(200, 200, 255, 0.4);
+    content: "";
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+  }
+  
+  /* Specific styling for chat content tables - using more specific selectors */
+  .chat-content table,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table {
+    border-collapse: collapse !important;
+    margin: 0 !important;
+    width: 100% !important;
+    display: table !important;
+    background: white !important;
+    border: 1px solid #d1d5db !important;
+  }
+  
+  .chat-content table td,
+  .chat-content table th,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table td,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table th {
+    border: 1px solid #d1d5db !important;
+    padding: 8px 12px !important;
+    display: table-cell !important;
+    vertical-align: top !important;
+    text-align: left !important;
+  }
+  
+  .chat-content table th,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table th {
+    background-color: #f3f4f6 !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+  }
+  
+  .chat-content table tr,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table tr {
+    display: table-row !important;
+  }
+  
+  .chat-content table thead,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table thead {
+    display: table-header-group !important;
+  }
+  
+  .chat-content table tbody,
+  .mb-4.prose.prose-sm.max-w-none.chat-content table tbody {
+    display: table-row-group !important;
+  }
+  
+  /* Global table reset to ensure tables display properly */
+  table {
+    border-collapse: collapse !important;
+    display: table !important;
+    width: 100% !important;
+    margin: 0 !important;
+    background: white !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: inherit !important;
+  }
+  
+  /* Ensure tables in rounded containers maintain border-radius */
+  .rounded-lg table,
+  div[class*="rounded"] table {
+    border-radius: inherit !important;
+    overflow: hidden !important;
+  }
+  
+  .rounded-lg table thead tr:first-child th:first-child,
+  div[class*="rounded"] table thead tr:first-child th:first-child {
+    border-top-left-radius: inherit !important;
+  }
+  
+  .rounded-lg table thead tr:first-child th:last-child,
+  div[class*="rounded"] table thead tr:first-child th:last-child {
+    border-top-right-radius: inherit !important;
+  }
+  
+  .rounded-lg table tbody tr:last-child td:first-child,
+  div[class*="rounded"] table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: inherit !important;
+  }
+  
+  .rounded-lg table tbody tr:last-child td:last-child,
+  div[class*="rounded"] table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: inherit !important;
+  }
+  
+  table td, table th {
+    display: table-cell !important;
+    padding: 8px 12px !important;
+    border: 1px solid #d1d5db !important;
+    vertical-align: top !important;
+  }
+  
+  table th {
+    background-color: #f3f4f6 !important;
+    font-weight: 600 !important;
+  }
+  
+  table tr {
+    display: table-row !important;
+  }
+  
+  table thead {
+    display: table-header-group !important;
+  }
+  
+  table tbody {
+    display: table-row-group !important;
+  }
+  
+  /* Force all div elements to not interfere with table display */
+  .prose table, .prose table *, 
+  .chat-content table, .chat-content table *,
+  div[class*="prose"] table, div[class*="prose"] table * {
+    box-sizing: border-box !important;
+  }
+  
+  /* Ultra-specific table styling for AI responses */
+  .text-gray-900 .chat-content table,
+  .leading-relaxed .chat-content table,
+  .max-w-none .chat-content table {
+    border-collapse: collapse !important;
+    display: table !important;
+    width: 100% !important;
+    margin: 0 !important;
+    background: white !important;
+    border: 2px solid #374151 !important;
+  }
+  
+  .text-gray-900 .chat-content table td,
+  .text-gray-900 .chat-content table th,
+  .leading-relaxed .chat-content table td,
+  .leading-relaxed .chat-content table th,
+  .max-w-none .chat-content table td,
+  .max-w-none .chat-content table th {
+    border: 1px solid #6b7280 !important;
+    padding: 12px !important;
+    display: table-cell !important;
+    vertical-align: top !important;
+    background: white !important;
+  }
+  
+  .text-gray-900 .chat-content table th,
+  .leading-relaxed .chat-content table th,
+  .max-w-none .chat-content table th {
+    background-color: #e5e7eb !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+  }
+  
+  /* TipTap editor styling */
+  .ProseMirror {
+    outline: none;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    min-height: 120px;
+    white-space: pre-wrap;
+  }
+  
+  .ProseMirror table {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .ProseMirror table td,
+  .ProseMirror table th {
+    border: 1px solid #ced4da;
+    box-sizing: border-box;
+    min-width: 1em;
+    padding: 3px 5px;
+    position: relative;
+    vertical-align: top;
+  }
+  
+  .ProseMirror table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: left;
+  }
+  
+  .ProseMirror table .selectedCell:after {
+    background: rgba(200, 200, 255, 0.4);
+    content: "";
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+  }
+}

@@ -1,0 +1,155 @@
+```index.tsx
+import './index.css'
+import React from "react";
+import { render } from "react-dom";
+import { ComponentPreview } from "./ComponentPreview";
+
+render(<ComponentPreview />, document.getElementById("root"));
+
+```
+```src/index.tsx
+import React from 'react'
+export { Chip } from './Chip'
+
+```
+```ComponentPreview.tsx
+import React, { Component } from 'react'
+import { Chip } from './src/Chip'
+export function ComponentPreview() {
+  return (
+    <div className="p-4 space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Default Chip</h3>
+        <Chip
+          text="What products are dispersable in water?"
+          onClick={() => console.log('Chip clicked')}
+        />
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Multiple Chips</h3>
+        <div className="flex flex-wrap gap-2">
+          <Chip text="Filter by category" />
+          <Chip text="Search suggestions" />
+          <Chip text="Interactive elements" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+```
+```tailwind.config.js
+export default {}
+```
+```index.css
+/* PLEASE NOTE: THESE TAILWIND IMPORTS SHOULD NEVER BE DELETED */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+/* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL */
+```
+```src/Chip.tsx
+import React from 'react'
+export interface ChipProps {
+  text: string
+  onClick?: () => void
+  className?: string
+  'data-id'?: string
+}
+export const Chip = ({
+  text,
+  onClick,
+  className = '',
+  'data-id': dataId,
+}: ChipProps) => {
+  return (
+    <button
+      onClick={onClick}
+      data-id={dataId}
+      className={`
+        inline-flex items-center px-3
+        h-[32px]
+        text-[14px] font-medium leading-[20px]
+        tracking-[-0.154px]
+        font-['Inter',sans-serif]
+        antialiased
+        text-[#505050]
+        bg-[#F4F4F4]
+        border border-[#E3E3E3]
+        rounded-[32px]
+        cursor-pointer
+        transition-colors
+        hover:bg-[#EAEAEA]
+        focus:outline-none focus:ring-2 focus:ring-[#E3E3E3]
+        max-w-full flex-shrink-0
+        ${className}
+      `.trim()}
+    >
+      {text}
+    </button>
+  )
+}
+
+```
+```components.config.json
+{
+  "entryPoint": "src/index.tsx"
+}
+```
+```context.md
+## Component Interface
+- **text**: `string` - The text to display on the chip. (Required)
+- **onClick**: `() => void` - Optional callback for click events.
+- **className**: `string` - Additional CSS classes for customization. (Default: `''`)
+- **data-id**: `string` - Optional identifier for data attributes.
+
+## Exported Components
+- `Chip`
+
+## Usage Examples
+```jsx
+import React from 'react';
+import { Chip } from './src/Chip';
+
+const Example = () => (
+  <div>
+    <Chip 
+      text="What products are dispersable in water?" 
+      onClick={() => console.log('Chip clicked')} 
+    />
+    <div className="flex flex-wrap gap-2">
+      <Chip text="Filter by category" />
+      <Chip text="Search suggestions" />
+      <Chip text="Interactive elements" />
+    </div>
+  </div>
+);
+```
+
+## Design Guidelines
+- Use consistent spacing (e.g., `p-4` for padding) and layout patterns (flexbox layout recommended for chips).
+- Suggested color scheme: light background with gray buttons (adjust opacity on hover).
+- Typography: use `text-sm` and `font-medium` class for readability.
+- Ensure chips are wrapped within a flexible container for responsive behavior.
+- Avoid cluttering chips with too much text; maintain clarity and simplicity.
+- Accessibility: provide clear keyboard navigation and focus states using `focus:ring` classes.
+
+## Styling & Behavior
+- Key styling props include `className` for custom styles.
+- Handling interactive states: use hover and focus styles (hover:bg-gray-100, focus:ring-2).
+- Responsive behavior is inherent; chips will wrap and adjust in a flex container.
+- Light mode is standard; dark mode considerations may need additional styles.
+- Edge cases: ensure that the text doesn't overflow; apply ellipsis or wrapping as needed.
+
+## Integration Notes
+- Ensure Tailwind CSS is properly integrated through `index.css`.
+- Use the `data-id` attribute for testing or automated UI checks.
+- Common integration includes wrapping chips in a containing element to manage layout.
+
+## Best Practices
+- Avoid using too many chips at once; limit to ensure usability.
+- Keep the design clean and maintain focus on actionable elements.
+- Performance: lazy load components or images if many chips are rendered dynamically.
+- Testing: ensure all props are covered, especially click events.
+- Accessibility: always provide keyboard support and ARIA roles for better UX.
+```
