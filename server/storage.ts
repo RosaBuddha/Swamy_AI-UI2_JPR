@@ -1,6 +1,17 @@
-import { users, settings, mockResponses, feedback, conversationSnapshots, type User, type InsertUser, type Setting, type InsertSetting, type MockResponse, type InsertMockResponse, type Feedback, type InsertFeedback, type ConversationSnapshot, type InsertConversationSnapshot } from "@shared/schema";
+import { 
+  users, settings, mockResponses, feedback, conversationSnapshots,
+  products, productSources, productProperties, replacementReasons, 
+  replacementRequests, productReplacements, externalProductCache,
+  type User, type InsertUser, type Setting, type InsertSetting, 
+  type MockResponse, type InsertMockResponse, type Feedback, type InsertFeedback, 
+  type ConversationSnapshot, type InsertConversationSnapshot,
+  type Product, type InsertProduct, type ProductSource, type InsertProductSource,
+  type ProductProperty, type InsertProductProperty, type ReplacementReason, type InsertReplacementReason,
+  type ReplacementRequest, type InsertReplacementRequest, type ProductReplacement, type InsertProductReplacement,
+  type ExternalProductCache, type InsertExternalProductCache
+} from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, like, and, or, gte } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -188,11 +199,176 @@ export class DatabaseStorage implements IStorage {
     const [snapshot] = await db.select().from(conversationSnapshots).where(eq(conversationSnapshots.id, id));
     return snapshot || undefined;
   }
+
+  // Product Replacement System Methods
+
+  // Product methods
+  async searchProducts(query: string, limit: number = 20): Promise<Product[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    return await db
+      .select()
+      .from(products)
+      .where(
+        and(
+          eq(products.isActive, true),
+          or(
+            like(products.name, searchPattern),
+            like(products.manufacturer, searchPattern),
+            like(products.chemicalName, searchPattern),
+            like(products.casNumber, searchPattern),
+            like(products.productNumber, searchPattern)
+          )
+        )
+      )
+      .limit(limit);
+  }
+
+  async getProduct(id: number): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product || undefined;
+  }
+
+  async createProduct(productData: InsertProduct): Promise<Product> {
+    const [newProduct] = await db
+      .insert(products)
+      .values(productData)
+      .returning();
+    return newProduct;
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product> {
+    const [updatedProduct] = await db
+      .update(products)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(products.id, id))
+      .returning();
+    return updatedProduct;
+  }
+
+  // Product source methods
+  async getProductSources(): Promise<ProductSource[]> {
+    return await db
+      .select()
+      .from(productSources)
+      .where(eq(productSources.isActive, true))
+      .orderBy(desc(productSources.priority));
+  }
+
+  async createProductSource(sourceData: InsertProductSource): Promise<ProductSource> {
+    const [newSource] = await db
+      .insert(productSources)
+      .values(sourceData)
+      .returning();
+    return newSource;
+  }
+
+  // Product property methods
+  async getProductProperties(productId: number): Promise<ProductProperty[]> {
+    return await db
+      .select()
+      .from(productProperties)
+      .where(eq(productProperties.productId, productId))
+      .orderBy(desc(productProperties.confidenceScore));
+  }
+
+  async createProductProperty(propertyData: InsertProductProperty): Promise<ProductProperty> {
+    const [newProperty] = await db
+      .insert(productProperties)
+      .values(propertyData)
+      .returning();
+    return newProperty;
+  }
+
+  // Replacement reason methods
+  async getReplacementReasons(): Promise<ReplacementReason[]> {
+    return await db
+      .select()
+      .from(replacementReasons)
+      .where(eq(replacementReasons.isActive, true))
+      .orderBy(replacementReasons.sortOrder);
+  }
+
+  async createReplacementReason(reasonData: InsertReplacementReason): Promise<ReplacementReason> {
+    const [newReason] = await db
+      .insert(replacementReasons)
+      .values(reasonData)
+      .returning();
+    return newReason;
+  }
+
+  // Replacement request methods
+  async createReplacementRequest(requestData: InsertReplacementRequest): Promise<ReplacementRequest> {
+    const [newRequest] = await db
+      .insert(replacementRequests)
+      .values(requestData)
+      .returning();
+    return newRequest;
+  }
+
+  async getReplacementRequest(id: number): Promise<ReplacementRequest | undefined> {
+    const [request] = await db.select().from(replacementRequests).where(eq(replacementRequests.id, id));
+    return request || undefined;
+  }
+
+  async updateReplacementRequest(id: number, updates: Partial<InsertReplacementRequest>): Promise<ReplacementRequest> {
+    const [updatedRequest] = await db
+      .update(replacementRequests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(replacementRequests.id, id))
+      .returning();
+    return updatedRequest;
+  }
+
+  // Product replacement methods
+  async createProductReplacement(replacementData: InsertProductReplacement): Promise<ProductReplacement> {
+    const [newReplacement] = await db
+      .insert(productReplacements)
+      .values(replacementData)
+      .returning();
+    return newReplacement;
+  }
+
+  async getProductReplacements(requestId: number): Promise<ProductReplacement[]> {
+    return await db
+      .select()
+      .from(productReplacements)
+      .where(eq(productReplacements.requestId, requestId))
+      .orderBy(desc(productReplacements.matchScore));
+  }
+
+  // External product cache methods
+  async getCachedProductData(searchTerm: string, sourceId: number): Promise<ExternalProductCache | undefined> {
+    const [cached] = await db
+      .select()
+      .from(externalProductCache)
+      .where(
+        and(
+          eq(externalProductCache.searchTerm, searchTerm),
+          eq(externalProductCache.sourceId, sourceId),
+          gte(externalProductCache.expiresAt, new Date())
+        )
+      );
+    return cached || undefined;
+  }
+
+  async setCachedProductData(cacheData: InsertExternalProductCache): Promise<ExternalProductCache> {
+    const [newCache] = await db
+      .insert(externalProductCache)
+      .values(cacheData)
+      .returning();
+    return newCache;
+  }
+
+  async clearExpiredCache(): Promise<void> {
+    await db
+      .delete(externalProductCache)
+      .where(gte(new Date(), externalProductCache.expiresAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
 
-// Initialize default settings
+// Initialize default settings and replacement reasons
 export const initializeDefaultSettings = async () => {
   const defaultSettings = [
     {
@@ -221,6 +397,101 @@ export const initializeDefaultSettings = async () => {
     const existingSetting = await storage.getSetting(setting.key);
     if (!existingSetting) {
       await storage.updateSetting(setting.key, setting.value);
+    }
+  }
+
+  // Initialize default replacement reasons
+  const defaultReasons = [
+    {
+      code: 'DISCONTINUED',
+      label: 'Product Discontinued',
+      description: 'The original product has been discontinued by the manufacturer',
+      sortOrder: 10
+    },
+    {
+      code: 'REGULATORY',
+      label: 'Regulatory Compliance',
+      description: 'Changes in regulatory requirements make a replacement necessary',
+      sortOrder: 20
+    },
+    {
+      code: 'COST_REDUCTION',
+      label: 'Cost Reduction',
+      description: 'Looking for a more cost-effective alternative',
+      sortOrder: 30
+    },
+    {
+      code: 'SUPPLY_CHAIN',
+      label: 'Supply Chain Issues',
+      description: 'Supply chain disruptions require alternative sourcing',
+      sortOrder: 40
+    },
+    {
+      code: 'SUSTAINABILITY',
+      label: 'Sustainability Goals',
+      description: 'Seeking more environmentally friendly alternatives',
+      sortOrder: 50
+    },
+    {
+      code: 'PERFORMANCE',
+      label: 'Performance Improvement',
+      description: 'Looking for a product with better performance characteristics',
+      sortOrder: 60
+    },
+    {
+      code: 'COMPATIBILITY',
+      label: 'Process Compatibility',
+      description: 'Need a product more compatible with existing processes',
+      sortOrder: 70
+    },
+    {
+      code: 'SAFETY',
+      label: 'Safety Concerns',
+      description: 'Safety considerations require a different product',
+      sortOrder: 80
+    }
+  ];
+
+  for (const reason of defaultReasons) {
+    const existingReasons = await storage.getReplacementReasons();
+    const exists = existingReasons.some(r => r.code === reason.code);
+    if (!exists) {
+      await storage.createReplacementReason(reason);
+    }
+  }
+
+  // Initialize default product sources
+  const defaultSources = [
+    {
+      name: 'palmer_holland',
+      baseUrl: 'https://api.knowde.com',
+      priority: 90,
+      isActive: true
+    },
+    {
+      name: 'chemspider',
+      baseUrl: 'https://www.chemspider.com/api',
+      priority: 70,
+      isActive: false // Will be activated when API key is provided
+    },
+    {
+      name: 'pubchem',
+      baseUrl: 'https://pubchem.ncbi.nlm.nih.gov/rest/pug',
+      priority: 60,
+      isActive: true
+    },
+    {
+      name: 'user_contributed',
+      priority: 50,
+      isActive: true
+    }
+  ];
+
+  for (const source of defaultSources) {
+    const existingSources = await storage.getProductSources();
+    const exists = existingSources.some(s => s.name === source.name);
+    if (!exists) {
+      await storage.createProductSource(source);
     }
   }
 };

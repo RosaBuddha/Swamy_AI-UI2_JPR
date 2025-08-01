@@ -1291,5 +1291,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Product Replacement System Routes
+
+  // Search products
+  app.get("/api/products/search", async (req, res) => {
+    try {
+      const { q: query, limit = 20 } = req.query;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query parameter 'q' is required" });
+      }
+      const products = await storage.searchProducts(query, Number(limit));
+      res.json(products);
+    } catch (error) {
+      console.error("Product search error:", error);
+      res.status(500).json({ error: "Failed to search products" });
+    }
+  });
+
+  // Get replacement reasons
+  app.get("/api/replacement-reasons", async (req, res) => {
+    try {
+      const reasons = await storage.getReplacementReasons();
+      res.json(reasons);
+    } catch (error) {
+      console.error("Get replacement reasons error:", error);
+      res.status(500).json({ error: "Failed to get replacement reasons" });
+    }
+  });
+
+  // Create replacement request
+  app.post("/api/replacement-requests", async (req, res) => {
+    try {
+      const {
+        originalProductName,
+        originalProductId,
+        reasonCodes = [],
+        additionalNotes,
+        userEmail
+      } = req.body;
+
+      if (!originalProductName) {
+        return res.status(400).json({ error: "Original product name is required" });
+      }
+
+      const requestData = {
+        originalProductName,
+        originalProductId: originalProductId || null,
+        reasonCodes,
+        additionalNotes: additionalNotes || null,
+        userEmail: userEmail || null,
+        status: "pending" as const,
+        discoveryAttempted: false
+      };
+
+      const request = await storage.createReplacementRequest(requestData);
+      res.status(201).json(request);
+    } catch (error) {
+      console.error("Create replacement request error:", error);
+      res.status(500).json({ error: "Failed to create replacement request" });
+    }
+  });
+
+  // Get replacement request
+  app.get("/api/replacement-requests/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid request ID" });
+      }
+
+      const request = await storage.getReplacementRequest(id);
+      if (!request) {
+        return res.status(404).json({ error: "Replacement request not found" });
+      }
+
+      res.json(request);
+    } catch (error) {
+      console.error("Get replacement request error:", error);
+      res.status(500).json({ error: "Failed to get replacement request" });
+    }
+  });
+
+  // Get product replacements for a request
+  app.get("/api/replacement-requests/:id/replacements", async (req, res) => {
+    try {
+      const requestId = Number(req.params.id);
+      if (isNaN(requestId)) {
+        return res.status(400).json({ error: "Invalid request ID" });
+      }
+
+      const replacements = await storage.getProductReplacements(requestId);
+      res.json(replacements);
+    } catch (error) {
+      console.error("Get product replacements error:", error);
+      res.status(500).json({ error: "Failed to get product replacements" });
+    }
+  });
+
+  // Admin route: Create product source
+  app.post("/api/admin/product-sources", async (req, res) => {
+    try {
+      const { name, baseUrl, apiKey, isActive = true, priority = 50 } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: "Source name is required" });
+      }
+
+      const sourceData = {
+        name,
+        baseUrl: baseUrl || null,
+        apiKey: apiKey || null,
+        isActive,
+        priority
+      };
+
+      const source = await storage.createProductSource(sourceData);
+      res.status(201).json(source);
+    } catch (error) {
+      console.error("Create product source error:", error);
+      res.status(500).json({ error: "Failed to create product source" });
+    }
+  });
+
+  // Admin route: Create replacement reason
+  app.post("/api/admin/replacement-reasons", async (req, res) => {
+    try {
+      const { code, label, description, isActive = true, sortOrder = 0 } = req.body;
+      
+      if (!code || !label) {
+        return res.status(400).json({ error: "Code and label are required" });
+      }
+
+      const reasonData = {
+        code,
+        label,
+        description: description || null,
+        isActive,
+        sortOrder
+      };
+
+      const reason = await storage.createReplacementReason(reasonData);
+      res.status(201).json(reason);
+    } catch (error) {
+      console.error("Create replacement reason error:", error);
+      res.status(500).json({ error: "Failed to create replacement reason" });
+    }
+  });
+
   return httpServer;
 }

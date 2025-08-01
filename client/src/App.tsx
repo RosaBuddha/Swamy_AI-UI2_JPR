@@ -5,12 +5,15 @@ import { ChatArea } from './components/chat/ChatArea';
 import { AdminPage } from './components/admin/AdminPage';
 import { VersionDisplay } from './components/ui/VersionDisplay';
 import { useChat } from './hooks/useChat';
+import ProductReplacement from './pages/ProductReplacement';
+import ReplacementRequestDetails from './pages/ReplacementRequestDetails';
 
-type AppView = 'chat' | 'admin';
+type AppView = 'chat' | 'admin' | 'product-replacement' | 'replacement-details';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('chat');
   const [showTaskSidebar, setShowTaskSidebar] = useState(false);
+  const [currentReplacementRequestId, setCurrentReplacementRequestId] = useState<number | null>(null);
   const [isTaskSidebarCollapsed, setIsTaskSidebarCollapsed] = useState(() => {
     // Load from localStorage, default to false (expanded)
     const saved = localStorage.getItem('taskSidebarCollapsed');
@@ -63,15 +66,29 @@ function App() {
 
   const handleBackToChat = () => {
     setCurrentView('chat');
+    setCurrentReplacementRequestId(null);
   };
 
   const handleLogoClick = () => {
-    // Refresh the page to reset to initial state
-    window.location.reload();
+    setCurrentView('chat');
+    setCurrentReplacementRequestId(null);
+  };
+
+  const handleProductReplacementClick = () => {
+    setCurrentView('product-replacement');
+  };
+
+  const handleReplacementRequestDetails = (requestId: number) => {
+    setCurrentReplacementRequestId(requestId);
+    setCurrentView('replacement-details');
   };
 
   const handleTaskClick = (taskId: string) => {
-    // Handle task selection - for now, we can create a new chat or send a message
+    if (taskId === 'find-replacement') {
+      handleProductReplacementClick();
+      return;
+    }
+    // Handle other task selections - for now, we can create a new chat or send a message
     console.log(`Task selected: ${taskId}`);
     // You could implement specific logic for each task here
   };
@@ -95,6 +112,22 @@ function App() {
     return (
       <div className="h-screen">
         <AdminPage onBack={handleBackToChat} />
+      </div>
+    );
+  }
+
+  if (currentView === 'product-replacement') {
+    return (
+      <div className="h-screen overflow-auto">
+        <ProductReplacement onBackToChat={handleBackToChat} />
+      </div>
+    );
+  }
+
+  if (currentView === 'replacement-details' && currentReplacementRequestId) {
+    return (
+      <div className="h-screen overflow-auto">
+        <ReplacementRequestDetails />
       </div>
     );
   }
