@@ -1438,5 +1438,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 2: Advanced replacement discovery with external APIs
+  app.post("/api/replacement-requests/:id/discover", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      if (isNaN(requestId)) {
+        return res.status(400).json({ error: "Invalid request ID" });
+      }
+
+      const request = await storage.getReplacementRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ error: "Replacement request not found" });
+      }
+
+      // Import external data service dynamically to avoid circular dependencies
+      const { externalDataService } = await import('./externalDataService');
+      
+      let originalProduct: any = null;
+      if (request.originalProductId) {
+        originalProduct = await storage.getProduct(request.originalProductId);
+      }
+
+      // Build search criteria from request
+      const criteria = {
+        chemicalClass: originalProduct?.category,
+        excludedSubstances: [], // Could be derived from reason codes
+        safetyProfile: request.reasonCodes?.includes('SAFETY') ? 'improved' : undefined,
+        regulatoryStatus: request.reasonCodes?.includes('REGULATORY') ? ['compliant'] : undefined
+      };
+
+      // Search for external replacements
+      const externalResults = originalProduct 
+        ? await externalDataService.findReplacements(originalProduct, criteria, 20)
+        : await externalDataService.searchExternalProducts(request.originalProductName, 20);
+
+      // Convert external results to product replacements and store them
+      const replacements = [];
+      for (const result of externalResults) {
+        const replacement = await storage.createProductReplacement({
+          requestId,
+          replacementProductId: 0, // External products don't have internal IDs
+          matchScore: result.confidence * 100,
+          reasonAlignment: JSON.stringify(criteria),
+          notes: `${result.name} from ${result.manufacturer || 'Unknown'} - Found via ${result.source} with ${Math.round(result.confidence * 100)}% confidence. CAS: ${result.casNumber || 'N/A'}`
+        });
+        replacements.push(replacement);
+      }
+
+      // Mark request as discovery attempted
+      await storage.updateReplacementRequest(requestId, { 
+        discoveryAttempted: true,
+        status: replacements.length > 0 ? 'in_progress' : 'no_matches_found'
+      });
+
+      res.json({
+        message: `Discovered ${replacements.length} potential replacements`,
+        count: replacements.length,
+        replacements: replacements.slice(0, 10) // Return first 10 for preview
+      });
+    } catch (error) {
+      console.error("Error discovering replacements:", error);
+      res.status(500).json({ error: "Failed to discover replacements" });
+    }
+  });
+
+  // Phase 2: Get external product details
+  app.get("/api/external-products/:source/:id", async (req, res) => {
+    try {
+      const { source, id } = req.params;
+      
+      const { externalDataService } = await import('./externalDataService');
+      const details = await externalDataService.getProductDetails(id, source);
+      
+      if (!details) {
+        return res.status(404).json({ error: "Product details not found" });
+      }
+
+      res.json(details);
+    } catch (error) {
+      console.error("Error getting external product details:", error);
+      res.status(500).json({ error: "Failed to get product details" });
+    }
+  });
+
+  // Phase 2: Advanced product search with external integration
+  app.get("/api/products/advanced-search", async (req, res) => {
+    try {
+      const { 
+        q: query = '', 
+        casNumber, 
+        category, 
+        manufacturer,
+        includeExternal = 'false',
+        limit = '20' 
+      } = req.query as Record<string, string>;
+
+      // Search internal products first
+      const internalProducts = await storage.searchProducts(query, Math.min(Number(limit), 50));
+      
+      let results = internalProducts.map(p => ({ ...p, source: 'internal' }));
+
+      // Include external results if requested
+      if (includeExternal === 'true' && query.length > 2) {
+        try {
+          const { externalDataService } = await import('./externalDataService');
+          const externalResults = await externalDataService.searchExternalProducts(query, 10);
+          
+          const externalProducts = externalResults.map((ext, index) => ({
+            id: index + 10000, // Use numeric IDs for external products
+            name: ext.name,
+            manufacturer: ext.manufacturer || 'Unknown',
+            casNumber: ext.casNumber || null,
+            chemicalName: ext.chemicalName || null,
+            productNumber: null,
+            category: ext.properties?.category || 'Unknown',
+            description: `External product from ${ext.source}`,
+            isActive: true,
+            source: 'external',
+            externalSource: ext.source,
+            confidence: ext.confidence,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }));
+
+          results = [...results, ...externalProducts];
+        } catch (error) {
+          console.warn('External search failed:', error);
+        }
+      }
+
+      // Apply additional filters
+      if (casNumber) {
+        results = results.filter(p => p.casNumber?.includes(casNumber));
+      }
+      if (category) {
+        results = results.filter(p => p.category?.toLowerCase().includes(category.toLowerCase()));
+      }
+      if (manufacturer) {
+        results = results.filter(p => p.manufacturer?.toLowerCase().includes(manufacturer.toLowerCase()));
+      }
+
+      // Sort by relevance (internal first, then by confidence/name)
+      results.sort((a, b) => {
+        if (a.source === 'internal' && b.source !== 'internal') return -1;
+        if (b.source === 'internal' && a.source !== 'internal') return 1;
+        if ((a as any).confidence && (b as any).confidence) return (b as any).confidence - (a as any).confidence;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      res.json(results.slice(0, Number(limit)));
+    } catch (error) {
+      console.error("Error in advanced search:", error);
+      res.status(500).json({ error: "Search failed" });
+    }
+  });
+
   return httpServer;
 }

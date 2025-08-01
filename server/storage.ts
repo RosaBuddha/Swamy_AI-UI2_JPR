@@ -364,6 +364,87 @@ export class DatabaseStorage implements IStorage {
       .delete(externalProductCache)
       .where(gte(new Date(), externalProductCache.expiresAt));
   }
+
+  // Additional methods for external data service
+  async cacheExternalData(searchTerm: string, sourceId: number, productData: string, expiresAt: Date): Promise<ExternalProductCache> {
+    const [cache] = await db
+      .insert(externalProductCache)
+      .values({
+        searchTerm,
+        sourceId,
+        productData,
+        expiresAt,
+        createdAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: [externalProductCache.searchTerm, externalProductCache.sourceId],
+        set: {
+          productData,
+          expiresAt,
+          createdAt: new Date()
+        }
+      })
+      .returning();
+    return cache;
+  }
+
+  async getCachedExternalData(searchTerm: string): Promise<ExternalProductCache | null> {
+    const [cache] = await db
+      .select()
+      .from(externalProductCache)
+      .where(
+        and(
+          eq(externalProductCache.searchTerm, searchTerm),
+          gt(externalProductCache.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+    return cache || null;
+  }
+
+  async getProductSourceByName(name: string): Promise<ProductSource | null> {
+    const [source] = await db
+      .select()
+      .from(productSources)
+      .where(eq(productSources.name, name))
+      .limit(1);
+    return source || null;
+  }
+
+  // Advanced replacement methods for Phase 2
+  async findSimilarProducts(originalProduct: Product, limit: number = 20): Promise<Product[]> {
+    const conditions = [];
+    
+    if (originalProduct.category) {
+      conditions.push(eq(products.category, originalProduct.category));
+    }
+    
+    if (originalProduct.casNumber) {
+      const casPrefix = originalProduct.casNumber.split('-')[0];
+      conditions.push(like(products.casNumber, `${casPrefix}%`));
+    }
+
+    if (conditions.length === 0) {
+      conditions.push(
+        or(
+          like(products.name, `%${originalProduct.name.split(' ')[0]}%`),
+          like(products.chemicalName, `%${originalProduct.name.split(' ')[0]}%`)
+        )
+      );
+    }
+
+    return await db
+      .select()
+      .from(products)
+      .where(
+        and(
+          eq(products.isActive, true),
+          ne(products.id, originalProduct.id),
+          or(...conditions)
+        )
+      )
+      .limit(limit);
+  }
 }
 
 export const storage = new DatabaseStorage();

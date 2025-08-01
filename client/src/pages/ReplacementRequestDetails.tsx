@@ -1,11 +1,11 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Package, CheckCircle, Clock, ExternalLink } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { AlertCircle, Package, CheckCircle, Clock, ExternalLink, Search, Zap } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ReplacementRequest, ProductReplacement, Product } from "@shared/schema";
 
 export default function ReplacementRequestDetails() {
@@ -70,6 +70,19 @@ export default function ReplacementRequestDetails() {
     if (score >= 40) return 'text-yellow-600';
     return 'text-red-600';
   };
+
+  // Phase 2: Advanced discovery mutation
+  const discoveryMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      return await apiRequest(`/api/replacement-requests/${requestId}/discover`, {
+        method: 'POST'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/replacement-requests', requestId, 'replacements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/replacement-requests', requestId] });
+    }
+  });
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -148,6 +161,48 @@ export default function ReplacementRequestDetails() {
           )}
         </CardContent>
       </Card>
+
+      {/* Phase 2: Advanced Discovery Section */}
+      {!request.discoveryAttempted && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-blue-600" />
+              Advanced Discovery
+            </CardTitle>
+            <CardDescription>
+              Use external chemical databases to find potential replacements
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => discoveryMutation.mutate(requestId)}
+              disabled={discoveryMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {discoveryMutation.isPending ? (
+                <>
+                  <Search className="h-4 w-4 mr-2 animate-spin" />
+                  Searching external databases...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Start Advanced Discovery
+                </>
+              )}
+            </Button>
+            {discoveryMutation.error && (
+              <Alert className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Failed to start discovery: {(discoveryMutation.error as any)?.message || 'Unknown error'}
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status Messages */}
       {request.status === 'pending' && (
