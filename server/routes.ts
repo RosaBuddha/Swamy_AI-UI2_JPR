@@ -1293,17 +1293,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Product Replacement System Routes
 
-  // Search products
+  // Enhanced search products with ChemSpider integration
   app.get("/api/products/search", async (req, res) => {
     try {
-      const { q: query, limit = 20 } = req.query;
+      const { 
+        q: query, 
+        limit = 20,
+        includeExternal = 'true',
+        minResults = 3
+      } = req.query;
+      
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: "Query parameter 'q' is required" });
       }
-      const products = await storage.searchProducts(query, Number(limit));
-      res.json(products);
+
+      const searchLimit = Math.min(Number(limit), 50);
+      const minResultThreshold = Number(minResults);
+
+      // Step 1: Search internal products first (fast response)
+      const internalProducts = await storage.searchProducts(query, searchLimit);
+      let results = internalProducts.map(p => ({ ...p, source: 'internal' }));
+
+      // Step 2: If insufficient results and external search enabled, query ChemSpider
+      if (includeExternal === 'true' && results.length < minResultThreshold && query.length > 2) {
+        try {
+          console.log(`Internal search returned ${results.length} results, fetching external data...`);
+          
+          const { externalDataService } = await import('./externalDataService');
+          const externalResults = await externalDataService.searchExternalProducts(query, searchLimit - results.length);
+          
+          // Convert external results to product format
+          const externalProducts = externalResults.map((ext, index) => ({
+            id: index + 10000, // Use high numeric IDs for external products
+            name: ext.name,
+            manufacturer: ext.manufacturer || 'Unknown',
+            casNumber: ext.casNumber || null,
+            chemicalName: ext.chemicalName || null,
+            productNumber: null,
+            category: ext.properties?.category || 'External',
+            description: `External product from ${ext.source} - ${ext.chemicalName || ext.name}`,
+            isActive: true,
+            source: 'external',
+            externalSource: ext.source,
+            sourceId: ext.sourceId,
+            confidence: ext.confidence,
+            molecularFormula: ext.molecularFormula,
+            molecularWeight: ext.molecularWeight,
+            synonyms: ext.synonyms,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }));
+
+          // Merge results, prioritizing internal products
+          results = [...results, ...externalProducts];
+          
+          console.log(`Enhanced search completed: ${internalProducts.length} internal + ${externalProducts.length} external = ${results.length} total results`);
+        } catch (error) {
+          console.warn('External search failed, returning internal results only:', error);
+          // Continue with internal results only
+        }
+      }
+
+      // Step 3: Sort results (internal first, then by confidence/name)
+      results.sort((a, b) => {
+        if (a.source === 'internal' && b.source !== 'internal') return -1;
+        if (b.source === 'internal' && a.source !== 'internal') return 1;
+        if ((a as any).confidence && (b as any).confidence) return (b as any).confidence - (a as any).confidence;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      // Return results with metadata
+      const response = {
+        results: results.slice(0, searchLimit),
+        totalResults: results.length,
+        internalResults: internalProducts.length,
+        externalResults: results.length - internalProducts.length,
+        searchTerm: query,
+        sources: ['internal', ...(results.some(r => r.source === 'external') ? ['chemspider', 'pubchem'] : [])]
+      };
+
+      res.json(response);
     } catch (error) {
-      console.error("Product search error:", error);
+      console.error("Enhanced product search error:", error);
       res.status(500).json({ error: "Failed to search products" });
     }
   });

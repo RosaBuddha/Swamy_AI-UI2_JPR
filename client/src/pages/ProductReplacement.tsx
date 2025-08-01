@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Search, Package, ChevronRight, ArrowLeft } from "lucide-react";
+import { AlertCircle, Search, Package, ChevronRight, ArrowLeft, Database, Cloud } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiRequest } from "@/lib/queryClient";
 import type { Product, ReplacementReason, ReplacementRequest } from "@shared/schema";
@@ -33,12 +33,21 @@ export default function ProductReplacement({ onBackToChat }: ProductReplacementP
     enabled: currentStep === 'reasons'
   });
 
-  // Search products
-  const { data: searchResults = [], isLoading: isSearching } = useQuery<Product[]>({
+  // Search products with enhanced ChemSpider integration
+  const { data: searchResponse, isLoading: isSearching } = useQuery<{
+    results: Product[];
+    totalResults: number;
+    internalResults: number;
+    externalResults: number;
+    searchTerm: string;
+    sources: string[];
+  }>({
     queryKey: ['/api/products/search', searchQuery],
     enabled: searchQuery.length > 2,
     queryFn: () => apiRequest(`/api/products/search?q=${encodeURIComponent(searchQuery)}`)
   });
+
+  const searchResults = searchResponse?.results || [];
 
   // Create replacement request mutation
   const createRequestMutation = useMutation({
@@ -142,7 +151,25 @@ export default function ProductReplacement({ onBackToChat }: ProductReplacementP
 
             {searchQuery.length > 2 && (
               <div className="space-y-2">
-                <Label>Search Results</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Search Results</Label>
+                  {searchResponse && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {searchResponse.internalResults > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Database className="h-3 w-3" />
+                          {searchResponse.internalResults} internal
+                        </div>
+                      )}
+                      {searchResponse.externalResults > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Cloud className="h-3 w-3" />
+                          {searchResponse.externalResults} external
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {isSearching ? (
                   <div className="text-center py-4 text-muted-foreground">
                     Searching products...
@@ -158,7 +185,15 @@ export default function ProductReplacement({ onBackToChat }: ProductReplacementP
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="space-y-1">
-                              <h4 className="font-medium">{product.name}</h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium">{product.name}</h4>
+                                {(product as any).source === 'external' && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    <Cloud className="h-3 w-3 mr-1" />
+                                    External
+                                  </Badge>
+                                )}
+                              </div>
                               {product.manufacturer && (
                                 <p className="text-sm text-muted-foreground">
                                   by {product.manufacturer}
@@ -169,8 +204,17 @@ export default function ProductReplacement({ onBackToChat }: ProductReplacementP
                                   CAS: {product.casNumber}
                                 </p>
                               )}
+                              {(product as any).confidence && (
+                                <p className="text-xs text-muted-foreground">
+                                  Confidence: {Math.round((product as any).confidence * 100)}%
+                                </p>
+                              )}
                             </div>
-                            <Package className="h-4 w-4 text-muted-foreground" />
+                            {(product as any).source === 'external' ? (
+                              <Cloud className="h-4 w-4 text-blue-500" />
+                            ) : (
+                              <Database className="h-4 w-4 text-green-500" />
+                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -201,8 +245,8 @@ export default function ProductReplacement({ onBackToChat }: ProductReplacementP
                       category: null,
                       description: null,
                       isActive: true,
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString()
+                      createdAt: new Date(),
+                      updatedAt: new Date()
                     });
                     setCurrentStep('reasons');
                   }}
@@ -307,7 +351,7 @@ export default function ProductReplacement({ onBackToChat }: ProductReplacementP
               <p><strong>Request ID:</strong> #{submittedRequest.id}</p>
               <p><strong>Product:</strong> {submittedRequest.originalProductName}</p>
               <p><strong>Status:</strong> <Badge variant="secondary">{submittedRequest.status}</Badge></p>
-              <p><strong>Submitted:</strong> {new Date(submittedRequest.createdAt).toLocaleDateString()}</p>
+              <p><strong>Submitted:</strong> {submittedRequest.createdAt ? new Date(submittedRequest.createdAt).toLocaleDateString() : 'N/A'}</p>
             </div>
 
             <Alert>
