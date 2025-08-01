@@ -395,7 +395,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(externalProductCache.searchTerm, searchTerm),
-          gt(externalProductCache.expiresAt, new Date())
+          gte(externalProductCache.expiresAt, new Date())
         )
       )
       .limit(1);

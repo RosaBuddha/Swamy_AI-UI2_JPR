@@ -225,6 +225,7 @@ export const insertProductReplacementSchema = createInsertSchema(productReplacem
   requestId: true,
   originalProductId: true,
   replacementProductId: true,
+  externalProductData: true,
   matchScore: true,
   reasonAlignment: true,
   notes: true,
