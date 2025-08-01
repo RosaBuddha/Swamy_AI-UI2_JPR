@@ -7,8 +7,9 @@ import { VersionDisplay } from './components/ui/VersionDisplay';
 import { useChat } from './hooks/useChat';
 import ProductReplacement from './pages/ProductReplacement';
 import ReplacementRequestDetails from './pages/ReplacementRequestDetails';
+import AlgorithmTest from './pages/AlgorithmTest';
 
-type AppView = 'chat' | 'admin' | 'product-replacement' | 'replacement-details';
+type AppView = 'chat' | 'admin' | 'product-replacement' | 'replacement-details' | 'algorithm-test';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('chat');

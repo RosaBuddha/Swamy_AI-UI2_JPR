@@ -1472,16 +1472,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? await externalDataService.findReplacements(originalProduct, criteria, 20)
         : await externalDataService.searchExternalProducts(request.originalProductName, 20);
 
-      // Convert external results to product replacements and store them
+      // Phase 3: Use advanced algorithms to score and rank external results
+      const { ReplacementAlgorithmEngine } = await import('./replacementAlgorithms');
+      const algorithmEngine = new ReplacementAlgorithmEngine();
+      
+      // Convert external results to Product format for algorithm processing
+      const externalProducts = externalResults.map((result, index) => ({
+        id: index + 10000,
+        name: result.name,
+        manufacturer: result.manufacturer || 'Unknown',
+        casNumber: result.casNumber,
+        chemicalName: result.chemicalName,
+        productNumber: null,
+        category: result.properties?.category || originalProduct?.category || 'Unknown',
+        description: `External product from ${result.source}`,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+
+      // Generate advanced replacement candidates with comprehensive scoring
+      const replacementCandidates = await algorithmEngine.generateReplacementCandidates(
+        originalProduct || {
+          id: 0,
+          name: request.originalProductName,
+          manufacturer: null,
+          casNumber: null,
+          chemicalName: null,
+          productNumber: null,
+          category: 'Unknown',
+          description: null,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        externalProducts,
+        criteria,
+        request
+      );
+
+      // Store top-ranked candidates as replacements
       const replacements = [];
-      for (const result of externalResults) {
+      for (const candidate of replacementCandidates.slice(0, 5)) { // Top 5 candidates
         const replacement = await storage.createProductReplacement({
           requestId,
-          replacementProductId: undefined, // External products don't have internal IDs
-          externalProductData: result, // Store full external product data
-          matchScore: result.confidence * 100,
-          reasonAlignment: JSON.stringify(criteria),
-          notes: `${result.name} from ${result.manufacturer || 'Unknown'} - Found via ${result.source} with ${Math.round(result.confidence * 100)}% confidence. CAS: ${result.casNumber || 'N/A'}`
+          replacementProductId: undefined,
+          externalProductData: {
+            ...candidate.product,
+            algorithmScore: candidate.score,
+            metadata: candidate.metadata
+          },
+          matchScore: candidate.score.overall,
+          reasonAlignment: JSON.stringify({
+            ...criteria,
+            algorithmDetails: {
+              matchType: candidate.metadata.matchType,
+              confidence: candidate.score.confidence,
+              breakdown: candidate.score.breakdown
+            }
+          }),
+          notes: `${candidate.product.name} - ${candidate.score.reasoning.join('. ')} (Algorithm Score: ${candidate.score.overall}%)`
         });
         replacements.push(replacement);
       }
