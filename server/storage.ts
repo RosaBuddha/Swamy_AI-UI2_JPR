@@ -11,7 +11,7 @@ import {
   type ExternalProductCache, type InsertExternalProductCache
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like, and, or, gte, gt, ne } from "drizzle-orm";
+import { eq, desc, like, and, or, gte, gt, ne, sql } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -212,11 +212,11 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(products.isActive, true),
           or(
-            like(products.name, searchPattern),
-            like(products.manufacturer, searchPattern),
-            like(products.chemicalName, searchPattern),
-            like(products.casNumber, searchPattern),
-            like(products.productNumber, searchPattern)
+            sql`LOWER(${products.name}) LIKE ${searchPattern}`,
+            sql`LOWER(${products.manufacturer}) LIKE ${searchPattern}`,
+            sql`LOWER(${products.chemicalName}) LIKE ${searchPattern}`,
+            sql`LOWER(${products.casNumber}) LIKE ${searchPattern}`,
+            sql`LOWER(${products.productNumber}) LIKE ${searchPattern}`
           )
         )
       )
