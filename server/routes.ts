@@ -1477,7 +1477,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const result of externalResults) {
         const replacement = await storage.createProductReplacement({
           requestId,
-          replacementProductId: 0, // External products don't have internal IDs
+          replacementProductId: null, // External products don't have internal IDs
+          externalProductData: result, // Store full external product data
           matchScore: result.confidence * 100,
           reasonAlignment: JSON.stringify(criteria),
           notes: `${result.name} from ${result.manufacturer || 'Unknown'} - Found via ${result.source} with ${Math.round(result.confidence * 100)}% confidence. CAS: ${result.casNumber || 'N/A'}`

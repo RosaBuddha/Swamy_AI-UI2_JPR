@@ -11,7 +11,7 @@ import {
   type ExternalProductCache, type InsertExternalProductCache
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like, and, or, gte } from "drizzle-orm";
+import { eq, desc, like, and, or, gte, gt, ne } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
