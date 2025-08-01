@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '../ui/textarea';
 import { Modal } from '../ui/Modal';
 import { useToast } from '@/hooks/use-toast';
