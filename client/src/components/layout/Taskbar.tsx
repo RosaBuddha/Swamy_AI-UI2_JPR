@@ -70,15 +70,15 @@ const FindReplacementPanel: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   const [replacementReason, setReplacementReason] = useState('');
 
   const replacementReasons = [
-    'Replace a material no longer for sale',
-    'Replace to meet a regulatory goal',
-    'Replace to meet a corporate governance requirement (no child labor, sustainably sourced, etc)',
-    'Replace based on price',
-    'Replace based on formulation change',
-    'Replace based on lack of supply',
-    'Replace to diversify my supply chain',
-    'Replace to use fewer different raw materials in my formulations',
-    'Temporarily replace due to supply issue (spot buy)'
+    'Material no longer for sale',
+    'Meet a regulatory goal',
+    'Meet a corporate governance',
+    'Better price',
+    'Formulation change',
+    'Lack of supply',
+    'Diversify my supply chain',
+    'Use fewer/different raw materials',
+    'Temporarily replace'
   ];
 
   return (
