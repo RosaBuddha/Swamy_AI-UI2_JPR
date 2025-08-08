@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Navbar } from './components/layout/Navbar';
-import { TaskSidebar } from './components/layout/TaskSidebar';
+import { Taskbar } from './components/layout/Taskbar';
 import { ChatArea } from './components/chat/ChatArea';
 import { AdminPage } from './components/admin/AdminPage';
 import { VersionDisplay } from './components/ui/VersionDisplay';
@@ -10,10 +10,10 @@ type AppView = 'chat' | 'admin';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('chat');
-  const [showTaskSidebar, setShowTaskSidebar] = useState(false);
-  const [isTaskSidebarCollapsed, setIsTaskSidebarCollapsed] = useState(() => {
+  const [showTaskbar, setShowTaskbar] = useState(false);
+  const [isTaskbarCollapsed, setIsTaskbarCollapsed] = useState(() => {
     // Load from localStorage, default to false (expanded)
-    const saved = localStorage.getItem('taskSidebarCollapsed');
+    const saved = localStorage.getItem('taskbarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
   const hasInitialized = useRef(false);
@@ -77,18 +77,18 @@ function App() {
   };
 
   const handleHowCanIHelpClick = () => {
-    setShowTaskSidebar(true);
+    setShowTaskbar(true);
   };
 
-  const handleCloseTaskSidebar = () => {
-    setShowTaskSidebar(false);
+  const handleCloseTaskbar = () => {
+    setShowTaskbar(false);
   };
 
-  const handleToggleTaskSidebar = () => {
-    const newCollapsed = !isTaskSidebarCollapsed;
-    setIsTaskSidebarCollapsed(newCollapsed);
+  const handleToggleTaskbar = () => {
+    const newCollapsed = !isTaskbarCollapsed;
+    setIsTaskbarCollapsed(newCollapsed);
     // Save to localStorage
-    localStorage.setItem('taskSidebarCollapsed', JSON.stringify(newCollapsed));
+    localStorage.setItem('taskbarCollapsed', JSON.stringify(newCollapsed));
   };
 
   if (currentView === 'admin') {
@@ -131,22 +131,22 @@ function App() {
           streamingMessageId={streamingMessageId}
           onSettingsClick={handleSettingsClick}
           onHowCanIHelpClick={handleHowCanIHelpClick}
-          showTaskSidebar={showTaskSidebar}
+          showTaskSidebar={showTaskbar}
           onProductSelect={handleProductSelection}
           onRefineQuery={handleRefineQuery}
         />
       </div>
 
-      {/* Show TaskSidebar when there are no messages OR when explicitly requested */}
-      {((!activeChat || activeChat.messages.length === 0) || showTaskSidebar) && (
-        <div className={`transition-all duration-300 ${isTaskSidebarCollapsed ? 'w-12' : 'w-80'}`}>
-          <TaskSidebar 
+      {/* Show Taskbar when there are no messages OR when explicitly requested */}
+      {((!activeChat || activeChat.messages.length === 0) || showTaskbar) && (
+        <div className={`transition-all duration-300 ${isTaskbarCollapsed ? 'w-12' : 'w-80'}`}>
+          <Taskbar 
             onTaskClick={handleTaskClick} 
             hasMessages={activeChat ? activeChat.messages.length > 0 : false}
-            showCloseButton={showTaskSidebar && activeChat && activeChat.messages.length > 0}
-            onClose={handleCloseTaskSidebar}
-            isCollapsed={isTaskSidebarCollapsed}
-            onToggleCollapse={handleToggleTaskSidebar}
+            showCloseButton={showTaskbar && activeChat && activeChat.messages.length > 0}
+            onClose={handleCloseTaskbar}
+            isCollapsed={isTaskbarCollapsed}
+            onToggleCollapse={handleToggleTaskbar}
           />
         </div>
       )}
