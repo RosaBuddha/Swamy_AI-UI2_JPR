@@ -2,7 +2,7 @@ import React from 'react';
 import { DollarSign, HelpCircle, RotateCcw, ClipboardList, FileText, Search, Eye, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import ExpandIcon from '../icons/ExpandIcon';
 
-interface TaskSidebarProps {
+interface TaskbarProps {
   onTaskClick?: (taskId: string) => void;
   hasMessages?: boolean;
   showCloseButton?: boolean;
@@ -13,8 +13,14 @@ interface TaskSidebarProps {
 
 const tasks = [
   {
+    id: 'find-replacement',
+    title: 'Find a product replacement',
+    icon: RotateCcw,
+    color: 'bg-purple-50 text-purple-600',
+  },
+  {
     id: 'help-sell',
-    title: 'Help me sell',
+    title: 'Build a sales plan',
     icon: DollarSign,
     color: 'bg-green-50 text-green-600',
   },
@@ -23,12 +29,6 @@ const tasks = [
     title: 'Answer a product question',
     icon: HelpCircle,
     color: 'bg-blue-50 text-blue-600',
-  },
-  {
-    id: 'find-replacement',
-    title: 'Find a product replacement',
-    icon: RotateCcw,
-    color: 'bg-purple-50 text-purple-600',
   },
   {
     id: 'respond-questionnaire',
@@ -62,7 +62,7 @@ const tasks = [
   },
 ];
 
-export const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
+export const Taskbar: React.FC<TaskbarProps> = ({ 
   onTaskClick, 
   hasMessages = false, 
   showCloseButton = false, 
@@ -88,7 +88,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
             type="button"
             onClick={onToggleCollapse}
             className="flex h-8 w-8 items-center justify-center rounded-lg p-[6px] hover:bg-gray-100 transition-colors text-gray-800"
-            aria-label="Expand sidebar"
+            aria-label="Expand taskbar"
             title="How can I help?"
           >
             <ChevronLeft className="h-[18px] w-[18px]" />
@@ -128,7 +128,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
               type="button"
               onClick={onToggleCollapse}
               className="flex h-8 w-8 items-center justify-center rounded-lg p-[6px] hover:bg-gray-100 transition-colors text-gray-800"
-              aria-label="Collapse sidebar"
+              aria-label="Collapse taskbar"
             >
               <ChevronRight className="h-[18px] w-[18px]" />
             </button>

@@ -1,19 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Sidebar } from './components/layout/Sidebar';
-import { TaskSidebar } from './components/layout/TaskSidebar';
+import { Navbar } from './components/layout/Navbar';
+import { Taskbar } from './components/layout/Taskbar';
 import { ChatArea } from './components/chat/ChatArea';
 import { AdminPage } from './components/admin/AdminPage';
 import { VersionDisplay } from './components/ui/VersionDisplay';
+import { ProductReplacementPanel } from './components/panels/ProductReplacementPanel';
 import { useChat } from './hooks/useChat';
 
 type AppView = 'chat' | 'admin';
+type AppMode = 'chat' | 'find-replacement';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('chat');
-  const [showTaskSidebar, setShowTaskSidebar] = useState(false);
-  const [isTaskSidebarCollapsed, setIsTaskSidebarCollapsed] = useState(() => {
+  const [currentMode, setCurrentMode] = useState<AppMode>('chat');
+  const [showTaskbar, setShowTaskbar] = useState(false);
+  const [previousTaskbarState, setPreviousTaskbarState] = useState(false);
+  const [isTaskbarCollapsed, setIsTaskbarCollapsed] = useState(() => {
     // Load from localStorage, default to false (expanded)
-    const saved = localStorage.getItem('taskSidebarCollapsed');
+    const saved = localStorage.getItem('taskbarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
   const hasInitialized = useRef(false);
@@ -77,18 +81,40 @@ function App() {
   };
 
   const handleHowCanIHelpClick = () => {
-    setShowTaskSidebar(true);
+    setShowTaskbar(true);
   };
 
-  const handleCloseTaskSidebar = () => {
-    setShowTaskSidebar(false);
+  const handleCloseTaskbar = () => {
+    setShowTaskbar(false);
   };
 
-  const handleToggleTaskSidebar = () => {
-    const newCollapsed = !isTaskSidebarCollapsed;
-    setIsTaskSidebarCollapsed(newCollapsed);
+  const handleToggleTaskbar = () => {
+    const newCollapsed = !isTaskbarCollapsed;
+    setIsTaskbarCollapsed(newCollapsed);
     // Save to localStorage
-    localStorage.setItem('taskSidebarCollapsed', JSON.stringify(newCollapsed));
+    localStorage.setItem('taskbarCollapsed', JSON.stringify(newCollapsed));
+  };
+
+  const handleModeSelect = (mode: AppMode) => {
+    if (mode === 'find-replacement') {
+      // Store current taskbar state before switching modes
+      setPreviousTaskbarState(showTaskbar);
+      setShowTaskbar(false);
+      setCurrentMode(mode);
+    }
+  };
+
+  const handleModeClose = () => {
+    // Return to chat mode and restore previous taskbar state
+    setCurrentMode('chat');
+    setShowTaskbar(previousTaskbarState);
+  };
+
+  const handleProductReplacementSubmit = (productName: string) => {
+    console.log('Product replacement submitted:', productName);
+    // TODO: Implement actual product replacement logic
+    // For now, just close the panel
+    handleModeClose();
   };
 
   if (currentView === 'admin') {
@@ -102,7 +128,7 @@ function App() {
   return (
     <div className="h-screen flex gap-3 py-4 px-3">
       <div className="flex-shrink-0">
-        <Sidebar
+        <Navbar
           onNewChat={handleNewChat}
           chatSessions={chatSessions.map(session => ({
             id: session.id,
@@ -120,6 +146,8 @@ function App() {
           onStartRenaming={startRenaming}
           onStopRenaming={stopRenaming}
           onLogoClick={handleLogoClick}
+          onModeSelect={handleModeSelect}
+          currentMode={currentMode}
         />
       </div>
       
@@ -131,29 +159,39 @@ function App() {
           streamingMessageId={streamingMessageId}
           onSettingsClick={handleSettingsClick}
           onHowCanIHelpClick={handleHowCanIHelpClick}
-          showTaskSidebar={showTaskSidebar}
+          showTaskSidebar={showTaskbar}
           onProductSelect={handleProductSelection}
           onRefineQuery={handleRefineQuery}
         />
       </div>
 
-      {/* Show TaskSidebar when there are no messages OR when explicitly requested */}
-      {((!activeChat || activeChat.messages.length === 0) || showTaskSidebar) && (
-        <div className={`transition-all duration-300 ${isTaskSidebarCollapsed ? 'w-12' : 'w-80'}`}>
-          <TaskSidebar 
+      {/* Show Taskbar when in chat mode and there are no messages OR when explicitly requested */}
+      {currentMode === 'chat' && (((!activeChat || activeChat.messages.length === 0) || showTaskbar)) && (
+        <div className={`transition-all duration-300 ${isTaskbarCollapsed ? 'w-12' : 'w-80'}`}>
+          <Taskbar 
             onTaskClick={handleTaskClick} 
             hasMessages={activeChat ? activeChat.messages.length > 0 : false}
-            showCloseButton={showTaskSidebar && activeChat && activeChat.messages.length > 0}
-            onClose={handleCloseTaskSidebar}
-            isCollapsed={isTaskSidebarCollapsed}
-            onToggleCollapse={handleToggleTaskSidebar}
+            showCloseButton={showTaskbar && activeChat && activeChat.messages.length > 0}
+            onClose={handleCloseTaskbar}
+            isCollapsed={isTaskbarCollapsed}
+            onToggleCollapse={handleToggleTaskbar}
+          />
+        </div>
+      )}
+
+      {/* Show ProductReplacementPanel when in find-replacement mode */}
+      {currentMode === 'find-replacement' && (
+        <div className="transition-all duration-300 w-80">
+          <ProductReplacementPanel 
+            onClose={handleModeClose}
+            onSubmit={handleProductReplacementSubmit}
           />
         </div>
       )}
       
       {/* Version display in bottom-right corner */}
       <div className="fixed bottom-4 right-4 z-10">
-        <VersionDisplay />
+        <VersionDisplay showFeedbackButton={true} />
       </div>
     </div>
   );

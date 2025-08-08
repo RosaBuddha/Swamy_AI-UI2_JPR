@@ -1166,5 +1166,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
 
+  // Feedback endpoints
+  
+  // Get all feedback (admin only)
+  app.get("/api/feedback", async (req, res) => {
+    try {
+      const feedbackList = await storage.getFeedback();
+      res.json(feedbackList);
+    } catch (error: any) {
+      console.error('Get feedback error:', error);
+      res.status(500).json({ error: "Failed to retrieve feedback" });
+    }
+  });
+
+  // Create feedback with conversation snapshot
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const { 
+        type, 
+        title, 
+        description, 
+        priority, 
+        userEmail, 
+        conversationHistory, 
+        sessionInfo 
+      } = req.body;
+
+      // Validate required fields
+      if (!type || !title || !description) {
+        return res.status(400).json({ error: "Type, title, and description are required" });
+      }
+
+      // Create conversation snapshot if provided
+      let conversationSnapshotId = null;
+      if (conversationHistory && conversationHistory.length > 0) {
+        const snapshot = await storage.createConversationSnapshot({
+          messages: JSON.stringify(conversationHistory),
+          sessionInfo: sessionInfo ? JSON.stringify(sessionInfo) : null
+        });
+        conversationSnapshotId = snapshot.id;
+      }
+
+      // Get browser and app info
+      const userAgent = req.headers['user-agent'] || '';
+      const currentRoute = req.headers['referer'] || '';
+      
+      // Read current version
+      let appVersion = 'unknown';
+      try {
+        const versionResponse = await fetch(`http://localhost:${process.env.PORT || 5000}/api/version`);
+        if (versionResponse.ok) {
+          const versionData = await versionResponse.json();
+          appVersion = versionData.version;
+        }
+      } catch (e) {
+        console.warn('Could not retrieve app version for feedback');
+      }
+
+      const feedback = await storage.createFeedback({
+        type,
+        title,
+        description,
+        priority: priority || 'medium',
+        userEmail: userEmail || null,
+        browserInfo: userAgent,
+        currentRoute,
+        appVersion,
+        conversationSnapshotId
+      });
+
+      res.json({ 
+        success: true, 
+        feedbackId: feedback.id,
+        message: "Thank you for your feedback! We'll review it shortly." 
+      });
+    } catch (error: any) {
+      console.error('Create feedback error:', error);
+      res.status(500).json({ error: "Failed to submit feedback" });
+    }
+  });
+
+  // Update feedback status (admin only)
+  app.put("/api/feedback/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, adminResponse } = req.body;
+
+      if (!status) {
+        return res.status(400).json({ error: "Status is required" });
+      }
+
+      const updatedFeedback = await storage.updateFeedbackStatus(
+        parseInt(id), 
+        status, 
+        adminResponse
+      );
+
+      res.json(updatedFeedback);
+    } catch (error: any) {
+      console.error('Update feedback status error:', error);
+      res.status(500).json({ error: "Failed to update feedback status" });
+    }
+  });
+
+  // Get conversation snapshot
+  app.get("/api/conversation-snapshot/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const snapshot = await storage.getConversationSnapshot(parseInt(id));
+      
+      if (!snapshot) {
+        return res.status(404).json({ error: "Conversation snapshot not found" });
+      }
+
+      res.json({
+        id: snapshot.id,
+        messages: JSON.parse(snapshot.messages),
+        sessionInfo: snapshot.sessionInfo ? JSON.parse(snapshot.sessionInfo) : null,
+        createdAt: snapshot.createdAt
+      });
+    } catch (error: any) {
+      console.error('Get conversation snapshot error:', error);
+      res.status(500).json({ error: "Failed to retrieve conversation snapshot" });
+    }
+  });
+
   return httpServer;
 }

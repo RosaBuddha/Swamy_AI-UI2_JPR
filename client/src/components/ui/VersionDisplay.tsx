@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { FeedbackButton } from './FeedbackButton';
 
 interface VersionInfo {
   version: string;
@@ -10,11 +11,13 @@ interface VersionInfo {
 interface VersionDisplayProps {
   className?: string;
   showDetails?: boolean;
+  showFeedbackButton?: boolean;
 }
 
 export const VersionDisplay: React.FC<VersionDisplayProps> = ({ 
   className = "", 
-  showDetails = false 
+  showDetails = false,
+  showFeedbackButton = false
 }) => {
   const { data: versionInfo } = useQuery<VersionInfo>({
     queryKey: ['/api/version'],
@@ -38,8 +41,9 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   }
 
   return (
-    <div className={`text-xs text-gray-400 ${className}`}>
-      v.{versionInfo.version}
+    <div className={`flex items-center gap-2 text-xs text-gray-400 ${className}`}>
+      <span>v.{versionInfo.version}</span>
+      {showFeedbackButton && <FeedbackButton />}
     </div>
   );
 };
