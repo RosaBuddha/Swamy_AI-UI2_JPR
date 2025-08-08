@@ -20,7 +20,7 @@ const tasks = [
   },
   {
     id: 'help-sell',
-    title: 'Help me sell',
+    title: 'Build a sales plan',
     icon: DollarSign,
     color: 'bg-green-50 text-green-600',
   },
