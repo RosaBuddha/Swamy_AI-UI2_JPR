@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Sidebar } from './components/layout/Sidebar';
+import { Navbar } from './components/layout/Navbar';
 import { TaskSidebar } from './components/layout/TaskSidebar';
 import { ChatArea } from './components/chat/ChatArea';
 import { AdminPage } from './components/admin/AdminPage';
@@ -102,7 +102,7 @@ function App() {
   return (
     <div className="h-screen flex gap-3 py-4 px-3">
       <div className="flex-shrink-0">
-        <Sidebar
+        <Navbar
           onNewChat={handleNewChat}
           chatSessions={chatSessions.map(session => ({
             id: session.id,

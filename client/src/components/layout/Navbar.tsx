@@ -9,7 +9,7 @@ import SalesCanvasIcon from '../icons/SalesCanvasIcon';
 import ExpandIcon from '../icons/ExpandIcon';
 import { useQuery } from '@tanstack/react-query';
 
-interface SidebarProps {
+interface NavbarProps {
   onNewChat: () => void;
   chatSessions: Array<{
     id: string;
@@ -29,7 +29,7 @@ interface SidebarProps {
   onLogoClick?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Navbar: React.FC<NavbarProps> = ({
   onNewChat,
   chatSessions,
   activeChatId,
@@ -221,7 +221,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
 
-            {/* User Avatar - Bottom of sidebar */}
+            {/* User Avatar - Bottom of navbar */}
             <div className="mt-auto pt-4 border-t border-gray-200">
               <div className="flex items-center space-x-3 p-2">
                 <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium" style={{ fontSize: '10px' }}>
