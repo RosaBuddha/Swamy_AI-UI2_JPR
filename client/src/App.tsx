@@ -4,19 +4,22 @@ import { Taskbar } from './components/layout/Taskbar';
 import { ChatArea } from './components/chat/ChatArea';
 import { AdminPage } from './components/admin/AdminPage';
 import { VersionDisplay } from './components/ui/VersionDisplay';
+import { ProductReplacementPanel } from './components/panels/ProductReplacementPanel';
 import { useChat } from './hooks/useChat';
 
 type AppView = 'chat' | 'admin';
+type AppMode = 'chat' | 'find-replacement';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('chat');
+  const [currentMode, setCurrentMode] = useState<AppMode>('chat');
   const [showTaskbar, setShowTaskbar] = useState(false);
+  const [previousTaskbarState, setPreviousTaskbarState] = useState(false);
   const [isTaskbarCollapsed, setIsTaskbarCollapsed] = useState(() => {
     // Load from localStorage, default to false (expanded)
     const saved = localStorage.getItem('taskbarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
-  const [activeMode, setActiveMode] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   
   const {
@@ -72,14 +75,9 @@ function App() {
   };
 
   const handleTaskClick = (taskId: string) => {
-    // Set the active mode when a task is clicked
-    setActiveMode(taskId);
+    // Handle task selection - for now, we can create a new chat or send a message
     console.log(`Task selected: ${taskId}`);
-  };
-
-  const handleModeClose = () => {
-    // Return to task list view
-    setActiveMode(null);
+    // You could implement specific logic for each task here
   };
 
   const handleHowCanIHelpClick = () => {
@@ -95,6 +93,28 @@ function App() {
     setIsTaskbarCollapsed(newCollapsed);
     // Save to localStorage
     localStorage.setItem('taskbarCollapsed', JSON.stringify(newCollapsed));
+  };
+
+  const handleModeSelect = (mode: AppMode) => {
+    if (mode === 'find-replacement') {
+      // Store current taskbar state before switching modes
+      setPreviousTaskbarState(showTaskbar);
+      setShowTaskbar(false);
+      setCurrentMode(mode);
+    }
+  };
+
+  const handleModeClose = () => {
+    // Return to chat mode and restore previous taskbar state
+    setCurrentMode('chat');
+    setShowTaskbar(previousTaskbarState);
+  };
+
+  const handleProductReplacementSubmit = (productName: string) => {
+    console.log('Product replacement submitted:', productName);
+    // TODO: Implement actual product replacement logic
+    // For now, just close the panel
+    handleModeClose();
   };
 
   if (currentView === 'admin') {
@@ -126,6 +146,8 @@ function App() {
           onStartRenaming={startRenaming}
           onStopRenaming={stopRenaming}
           onLogoClick={handleLogoClick}
+          onModeSelect={handleModeSelect}
+          currentMode={currentMode}
         />
       </div>
       
@@ -143,8 +165,8 @@ function App() {
         />
       </div>
 
-      {/* Show Taskbar when there are no messages OR when explicitly requested */}
-      {((!activeChat || activeChat.messages.length === 0) || showTaskbar) && (
+      {/* Show Taskbar when in chat mode and there are no messages OR when explicitly requested */}
+      {currentMode === 'chat' && (((!activeChat || activeChat.messages.length === 0) || showTaskbar)) && (
         <div className={`transition-all duration-300 ${isTaskbarCollapsed ? 'w-12' : 'w-80'}`}>
           <Taskbar 
             onTaskClick={handleTaskClick} 
@@ -153,8 +175,16 @@ function App() {
             onClose={handleCloseTaskbar}
             isCollapsed={isTaskbarCollapsed}
             onToggleCollapse={handleToggleTaskbar}
-            activeMode={activeMode}
-            onModeClose={handleModeClose}
+          />
+        </div>
+      )}
+
+      {/* Show ProductReplacementPanel when in find-replacement mode */}
+      {currentMode === 'find-replacement' && (
+        <div className="transition-all duration-300 w-80">
+          <ProductReplacementPanel 
+            onClose={handleModeClose}
+            onSubmit={handleProductReplacementSubmit}
           />
         </div>
       )}
