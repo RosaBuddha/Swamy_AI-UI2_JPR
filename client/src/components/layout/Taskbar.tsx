@@ -85,7 +85,7 @@ const FindReplacementPanel: React.FC<{ onClose: () => void }> = ({ onClose }) =>
       <div className="space-y-4">
         <div>
           <label htmlFor="product-name" className="block text-sm font-medium text-gray-700 mb-2">
-            Product name to replace
+            Product to replace
           </label>
           <input
             id="product-name"
