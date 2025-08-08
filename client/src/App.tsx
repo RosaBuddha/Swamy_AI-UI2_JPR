@@ -16,6 +16,7 @@ function App() {
     const saved = localStorage.getItem('taskbarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
+  const [activeMode, setActiveMode] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   
   const {
@@ -71,9 +72,14 @@ function App() {
   };
 
   const handleTaskClick = (taskId: string) => {
-    // Handle task selection - for now, we can create a new chat or send a message
+    // Set the active mode when a task is clicked
+    setActiveMode(taskId);
     console.log(`Task selected: ${taskId}`);
-    // You could implement specific logic for each task here
+  };
+
+  const handleModeClose = () => {
+    // Return to task list view
+    setActiveMode(null);
   };
 
   const handleHowCanIHelpClick = () => {
@@ -147,6 +153,8 @@ function App() {
             onClose={handleCloseTaskbar}
             isCollapsed={isTaskbarCollapsed}
             onToggleCollapse={handleToggleTaskbar}
+            activeMode={activeMode}
+            onModeClose={handleModeClose}
           />
         </div>
       )}

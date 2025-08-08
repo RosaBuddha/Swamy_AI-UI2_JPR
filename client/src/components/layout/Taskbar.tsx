@@ -1,5 +1,5 @@
-import React from 'react';
-import { DollarSign, HelpCircle, RotateCcw, ClipboardList, FileText, Search, Eye, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { DollarSign, HelpCircle, RotateCcw, ClipboardList, FileText, Search, Eye, ArrowRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import ExpandIcon from '../icons/ExpandIcon';
 
 interface TaskbarProps {
@@ -9,6 +9,8 @@ interface TaskbarProps {
   onClose?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  activeMode?: string | null;
+  onModeClose?: () => void;
 }
 
 const tasks = [
@@ -62,13 +64,52 @@ const tasks = [
   },
 ];
 
+// Mode panel component for Find Product Replacement
+const FindReplacementPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [productName, setProductName] = useState('');
+
+  return (
+    <div className="w-80 bg-white rounded-[24px] border border-gray-200 p-6 h-full overflow-y-auto">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-semibold text-gray-900 font-inter text-[16px]">Find a product replacement</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-lg p-[6px] hover:bg-gray-100 transition-colors text-gray-800"
+          aria-label="Close"
+        >
+          <X className="h-[18px] w-[18px]" />
+        </button>
+      </div>
+      
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="product-name" className="block text-sm font-medium text-gray-700 mb-2">
+            Product name to replace
+          </label>
+          <input
+            id="product-name"
+            type="text"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+            placeholder="Enter the product name you wish to replace"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const Taskbar: React.FC<TaskbarProps> = ({ 
   onTaskClick, 
   hasMessages = false, 
   showCloseButton = false, 
   onClose, 
   isCollapsed = false, 
-  onToggleCollapse 
+  onToggleCollapse,
+  activeMode = null,
+  onModeClose
 }) => {
   const handleTaskClick = (taskId: string, title: string) => {
     if (onTaskClick) {
@@ -78,6 +119,21 @@ export const Taskbar: React.FC<TaskbarProps> = ({
     // For now, we'll just log it
     console.log(`Task clicked: ${taskId} - ${title}`);
   };
+
+  const handleModeClose = () => {
+    if (onModeClose) {
+      onModeClose();
+    }
+  };
+
+  // Show mode panel if there's an active mode
+  if (activeMode) {
+    if (activeMode === 'find-replacement') {
+      return <FindReplacementPanel onClose={handleModeClose} />;
+    }
+    // Add other modes here as they are implemented
+    // For now, fallback to task list if mode not recognized
+  }
 
   if (isCollapsed) {
     return (
