@@ -67,6 +67,19 @@ const tasks = [
 // Mode panel component for Find Product Replacement
 const FindReplacementPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [productName, setProductName] = useState('');
+  const [replacementReason, setReplacementReason] = useState('');
+
+  const replacementReasons = [
+    'Replace a material no longer for sale',
+    'Replace to meet a regulatory goal',
+    'Replace to meet a corporate governance requirement (no child labor, sustainably sourced, etc)',
+    'Replace based on price',
+    'Replace based on formulation change',
+    'Replace based on lack of supply',
+    'Replace to diversify my supply chain',
+    'Replace to use fewer different raw materials in my formulations',
+    'Temporarily replace due to supply issue (spot buy)'
+  ];
 
   return (
     <div className="w-80 bg-white rounded-[24px] border border-gray-200 p-6 h-full overflow-y-auto">
@@ -95,6 +108,25 @@ const FindReplacementPanel: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             placeholder="Enter the product name you wish to replace"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+        </div>
+        
+        <div>
+          <label htmlFor="replacement-reason" className="block text-sm font-medium text-gray-700 mb-2">
+            Reason for replacement
+          </label>
+          <select
+            id="replacement-reason"
+            value={replacementReason}
+            onChange={(e) => setReplacementReason(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
+            <option value="">Select a reason...</option>
+            {replacementReasons.map((reason, index) => (
+              <option key={index} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
